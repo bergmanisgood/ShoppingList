@@ -31,6 +31,8 @@ public class CreateListActivity extends Activity {
 	int rowId = 0;
 	// массив для заполнения спинера
 	String[] data = {"кг", "шт", "гр", "м", "см", "упк", "пак", "бут"};
+	private MyItemAdapter adapter;
+	private long _listID;
 	
 	@SuppressWarnings("deprecation")
 	@Override
@@ -39,7 +41,7 @@ public class CreateListActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.create_list);
 		// получаем ID нашего списка и производим выборку из БД всех товаров которы в нем содержаться
-		final long _listID = getIntent().getLongExtra("_id",-6);
+		_listID = getIntent().getLongExtra("_id",-6);
 		
 		//подключаем спинер для выбора типа товара
 		ArrayAdapter<String> adprSpinner = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, data);
@@ -71,7 +73,7 @@ public class CreateListActivity extends Activity {
 		int[] to = new int[] {0,R.id.cbState,R.id.tvItemTitle,R.id.tvItemCount,R.id.tvItemTypeCount};
 		
 		//Создание объекта совего адаптера
-		final MyItemAdapter adapter = new MyItemAdapter(getApplicationContext(), R.layout.create_list_item,
+		adapter = new MyItemAdapter(getApplicationContext(), R.layout.create_list_item,
 				c, from, to);
 		final ListView lvItem = (ListView) findViewById(R.id.lvItem);	
 		
@@ -94,15 +96,9 @@ public class CreateListActivity extends Activity {
 								switch (_item) {
 									case 0: {
 										// Обработка нажатия "удалить"
-										DBCreationLevel mainDB = new DBCreationLevel(context);
-										SQLiteDatabase sqliteDB = mainDB.getReadableDatabase();
 										DataAccessLevel.delete(getBaseContext(), adapter.getItemId(pos),ItemFields.ITEM_TABLE_NAME);
 										
-										final Cursor c = sqliteDB.query(ItemFields.ITEM_TABLE_NAME, null, ItemFields.ItemNamesColumns.ITEM_LIST_ID + "=" + _listID, null, null, null, null);
-										adapter.changeCursor(c);
-										
-										mainDB.close();
-										sqliteDB.close();
+										updateCursor();
 									}
 										break;
 									
@@ -120,32 +116,42 @@ public class CreateListActivity extends Activity {
 		OnClickListener oclBtn = new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-
-						if((!edtItemName.getText().toString().equals(""))&(!edtItemCount.getText().toString().equals("")) ){
+						String itemName = edtItemName.getText().toString();
+						if((!itemName.equals(""))&(!itemName.equals("")) ){
 							
 							DataAccessLevel.writeItem(getBaseContext(), 
-									'"'+edtItemName.getText().toString()+'"',
+									'"'+itemName+'"',
 									Integer.parseInt(edtItemCount.getText().toString()),
 									'"'+spnr.getSelectedItem().toString()+'"',
 									_listID,
 									1);
-							DBCreationLevel mainDB = new DBCreationLevel(context);
-							SQLiteDatabase sqliteDB = mainDB.getReadableDatabase();
-							
-							final Cursor updContent = sqliteDB.query(ItemFields.ITEM_TABLE_NAME, null, 
-							ItemFields.ItemNamesColumns.ITEM_LIST_ID + "=" + _listID, null, null, null, null);
-							adapter.changeCursor(updContent);
-
-							mainDB.close();
-							sqliteDB.close();
-				}
+							updateCursor();
+							//сбрасываем значение текстовых полей
+							edtItemName.setText("");
+							//фокус на название покупки
+							edtItemName.requestFocus();
+							edtItemCount.setText("");
+						}
 			}
 		};
 		
 		btnCreateItem.setOnClickListener(oclBtn);
 	
 	}
+	
+	//изменяем состояние курсора
+	private void updateCursor(){
+		DBCreationLevel mainDB = new DBCreationLevel(context);
+		SQLiteDatabase sqliteDB = mainDB.getReadableDatabase();
+		
+		final Cursor updContent = sqliteDB.query(ItemFields.ITEM_TABLE_NAME, null, 
+		ItemFields.ItemNamesColumns.ITEM_LIST_ID + "=" + _listID, null, null, null, null);
+		adapter.changeCursor(updContent);
 
+		mainDB.close();
+		sqliteDB.close();
+	}
+	
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
     	
@@ -162,13 +168,13 @@ public class CreateListActivity extends Activity {
 		switch (item.getItemId()) {
 			case 1: {
 				_moveActivity = new Intent(this, MainActivity.class);
+				//использование флага позволит удалить ExistListActivity из стека активити
+				_moveActivity.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 				startActivity(_moveActivity);
 				finish();
 			}
 				break;
 			case 2: {
-				_moveActivity = new Intent(this, ExistListActivity.class);
-				startActivity(_moveActivity);
 				finish();
 			}
 				break;

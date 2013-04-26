@@ -23,12 +23,13 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemLongClickListener;
 /*
- * Класс Activity, которое отвечает за отобращение существующих списков покупок
+ * Класс Activity, которое отвечает за отображение существующих списков покупок
  */
 public class ExistListActivity extends Activity {
 
 	final Context context = this;
 	int rowId = 0;
+	private SimpleCursorAdapter adapter;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		
@@ -42,7 +43,7 @@ public class ExistListActivity extends Activity {
 		final String[] from = { ListFields.ListNamesColumns.LIST_TITLE };
 		int[] to = new int[] { R.id.tvListTitle };
 		
-		final SimpleCursorAdapter adapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.exist_list_item,
+		 adapter = new SimpleCursorAdapter(getApplicationContext(), R.layout.exist_list_item,
 				c, from, to);
 		final ListView lvData = (ListView) findViewById(R.id.lvData);	
 		lvData.setAdapter(adapter);
@@ -57,7 +58,6 @@ public class ExistListActivity extends Activity {
 				Intent intent = new Intent(ExistListActivity.this, CreateListActivity.class);				
 				intent.putExtra("_id", id);
 				startActivity(intent);
-				finish();
 			}
 		});
 		
@@ -80,15 +80,8 @@ public class ExistListActivity extends Activity {
 								switch (_item) {
 									case 0: {
 										// Обработка нажатия "удалить"
-										DBCreationLevel mainDB = new DBCreationLevel(context);
-										SQLiteDatabase sqliteDB = mainDB.getReadableDatabase();
 										DataAccessLevel.delete(getBaseContext(), adapter.getItemId(pos),ListFields.LIST_TABLE_NAME);
-										
-										final Cursor c = sqliteDB.query(ListFields.LIST_TABLE_NAME, null, null, null, null, null, null);
-										adapter.changeCursor(c);
-										
-										mainDB.close();
-										sqliteDB.close();
+										updateCursor();
 									}
 										break;
 									case 1: {
@@ -108,15 +101,9 @@ public class ExistListActivity extends Activity {
 
 													@Override
 													public void onClick(DialogInterface dialog, int id) {
-
-														DBCreationLevel mainDB = new DBCreationLevel(context);
-														SQLiteDatabase sqliteDB = mainDB.getReadableDatabase();
 														DataAccessLevel.updateList(getBaseContext(), _userInput
-																.getText().toString(), adapter.getItemId(pos));		
-														final Cursor c = sqliteDB.query(ListFields.LIST_TABLE_NAME, null, null, null, null, null, null);
-														adapter.changeCursor(c);
-														mainDB.close();
-														sqliteDB.close();
+																.getText().toString(), adapter.getItemId(pos));	
+														updateCursor();
 													}
 												}).setNegativeButton("Отмена",
 												new DialogInterface.OnClickListener() {
@@ -141,7 +128,8 @@ public class ExistListActivity extends Activity {
 			}
 		});
 	}
-
+	
+	
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 
@@ -154,13 +142,20 @@ public class ExistListActivity extends Activity {
 
 		switch (item.getItemId()) {
 			case 1: {
-				Intent _moveActivity = new Intent(this, MainActivity.class);
-				startActivity(_moveActivity);
 				finish();
 			}
 				break;
 		}
 		return true;
 	}
-
+	
+	private void updateCursor(){
+		DBCreationLevel mainDB = new DBCreationLevel(context);
+		SQLiteDatabase sqliteDB = mainDB.getReadableDatabase();
+		
+		final Cursor c = sqliteDB.query(ListFields.LIST_TABLE_NAME, null, null, null, null, null, null);
+		adapter.changeCursor(c);
+		mainDB.close();
+		sqliteDB.close();
+	}
 }

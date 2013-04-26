@@ -34,17 +34,13 @@ public class MainActivity extends Activity {
 				// по id определеяем кнопку, вызвавшую этот обработчик
 				switch (v.getId()) {
 				case R.id.btnExistList:
-					Intent _newListIntent = new Intent(MainActivity.this,ExistListActivity.class);
-					startActivity(_newListIntent);
-					finish();
+					startExistingListActivity();
 				break;
 				case R.id.btnCreateNewList:
 						if(!edtNewListName.getText().toString().equals("") ){
 							// Создаем новый список покупок и переходим на Activity, где содержаться все созданные списки покупок
 							DataAccessLevel.writeList(getBaseContext(), '"'+edtNewListName.getText().toString()+'"');
-							Intent _viewListIntent = new Intent(MainActivity.this,ExistListActivity.class);
-							startActivity(_viewListIntent);
-							finish();
+							startExistingListActivity();
 						}
 				}
 			}
@@ -53,7 +49,13 @@ public class MainActivity extends Activity {
 		btnExistList.setOnClickListener(oclBtn);
 		btnCreateNewList.setOnClickListener(oclBtn);
 	}
-
+	
+	
+	private void startExistingListActivity(){
+		Intent _newListIntent = new Intent(MainActivity.this,ExistListActivity.class);
+		startActivity(_newListIntent);
+	}
+	
     @Override
 	public boolean onCreateOptionsMenu(Menu menu) {
     	
