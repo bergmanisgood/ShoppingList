@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">ShoppingList</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">Settings</string>
+    <string name="title_activity_create_list">Create Shopping List</string>
+    <string name="title_activity_exist_list">Ваши списки покупок</string>
+
+</resources>
